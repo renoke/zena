@@ -12,7 +12,7 @@ module YamlTest
     
     # build an array of file_name, file_path, options
     def file_list(caller_dir, opts)
-      directories = opts[:directories] || [:default]
+      directories = opts[:directories] || [opts[:directory] || :default]
       
       if files = opts[:files]
         files.map!{|f| f.to_s}
@@ -20,10 +20,10 @@ module YamlTest
       
       directories = directories.map do |dir|
         if dir == :default
-          if caller_dir.split('/').last =~ /^(.*)_test.rb/
+          if caller_dir.split('/').last =~ /^(.*)_test.rb/ || caller_dir.split('/').last =~ /^test_(.*).rb/
             directories = [File.join(File.dirname(caller_dir), $1)]
           else
-            puts "Bad file name for yaml_tests '#{caller_dir}'. Should be '..._test.rb'. Trying parent directory."
+            puts "Bad file name for yaml_tests '#{caller_dir}'. Should be '..._test.rb' or 'test_....rb'. Trying parent directory."
             directories = [File.dirname(caller_dir)]
           end
         else
