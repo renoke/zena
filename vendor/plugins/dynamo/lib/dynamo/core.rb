@@ -38,14 +38,6 @@ module Dynamo
         encode_dynamo
       end
 
-      def read_attribute_with_dynamo(attr_name)
-        if attr_name == 'dynamo'
-          decode_dynamo
-        else
-          read_attribute_without_dynamo(attr_name)
-        end
-      end
-
       private
 
         def encode_dynamo
@@ -76,7 +68,6 @@ module Dynamo
       receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
       receiver.send :alias_method_chain, :attributes=,    :dynamo
-      #receiver.send :alias_method_chain, :read_attribute, :dynamo
       receiver.send :before_save, :encode_dynamo
     end
   end
