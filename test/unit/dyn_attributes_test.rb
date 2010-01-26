@@ -61,11 +61,9 @@ class DynAttributesTest < Test::Unit::TestCase
     assert_equal 'blue', record.dyn['color']
   end
 
-  def test_many_alias_methods
+  def test_find
     record = DynDummy.create(:title => 'worn-shoes', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
-
-    #assert record = DynDummy.find_by_title('worn-shoes')
-
+    assert record = DynDummy.find(record)
     assert_equal 'worn', record.dyn[:shoes]
   end
 
@@ -143,7 +141,7 @@ class DynAttributesTest < Test::Unit::TestCase
     assert_equal 'weird', record.dyn.delete(:joy)
     assert_nil record.dyn[:joy]
     assert record.save
-    record = DynDummy.find(record[:id]) # reload
+    record = DynDummy.find(record) # reload
     assert_nil record.dyn[:joy]
     assert_equal 'fun', record.dyn[:life]
   end
@@ -156,21 +154,12 @@ class DynAttributesTest < Test::Unit::TestCase
     assert_equal n-1, DynDummy.count
   end
 
-  def test_would_edit
-   record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :bio=>'biography', :hell => 'blind love')
-   assert !record.dyn.would_edit?('hell' => 'blind love', 'bio' => 'biography')
-   assert  record.dyn.would_edit?('hell' => 'blind love', 'bio' => '')
-   assert  record.dyn.would_edit?('hell' => 'blind love', 'fox' => 'hop')
-   assert !record.dyn.would_edit?('hell' => 'blind love', 'fox' => '', 'fly' => nil)
-  end
-
   def test_changed
     record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :bio=>'biography', :hell => 'blind love')
-    record = DynDummy.find(record.id) # reload
-    assert !record.dynamo.changed?
-    record.dyn['bio'] = 'biography'
-    assert !record.dyn.changed?
-    record.dyn['bio'] = 'Gemüse'
-    assert record.dyn.changed?
+    assert !record.changed?
+    record.attributes={:bio=>'biography'}
+    assert !record.changed?
+    record.attributes={:bio=>'Gemüse'}
+    assert record.changed?
   end
 end
