@@ -11,7 +11,7 @@ class Developer < Employee
 end
 
 class Version < ActiveRecord::Base
-  include Dynamo::Core
+  include Dynamo::Attribute
   include Dynamo::Serialization::Marshal
 end
 

@@ -1,9 +1,5 @@
 module Dynamo
-  module Core
-
-    module ClassMethods
-
-    end
+  module Attribute
 
     module InstanceMethods
 
@@ -52,6 +48,16 @@ module Dynamo
           raise TypeError, 'Argument is not Hash' unless data.kind_of?(Hash)
         end
 
+        def changed_with_dynamo?
+          encode_dynamo
+          changed_without_dynamo?
+        end
+
+        def changed_with_dynamo
+          encode_dynamo
+          changed_without_dynamo
+        end
+
       protected
 
         def merge_dynamo(new_attributes)
@@ -65,9 +71,10 @@ module Dynamo
     end
 
     def self.included(receiver)
-      receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
-      receiver.send :alias_method_chain, :attributes=,    :dynamo
+      receiver.send :alias_method_chain, :attributes=,  :dynamo
+      receiver.send :alias_method_chain, :changed,     :dynamo
+      receiver.send :alias_method_chain, :changed?,     :dynamo
       receiver.send :before_save, :encode_dynamo
     end
   end

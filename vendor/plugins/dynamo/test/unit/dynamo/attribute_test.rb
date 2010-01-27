@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'fixtures'
 
-class TestCore < Test::Unit::TestCase
+class TestAttribute < Test::Unit::TestCase
 
 
   context 'Write dynamic attributes with dynamo=' do
@@ -205,11 +205,18 @@ context 'Dirty' do
     assert_equal 'test', subject.title_was
   end
 
-  should 'check if record was changed with dynamo' do
+  should 'check if record was changed with dynamo=' do
     subject.dynamo={'foo'=>'barre'}
     assert subject.changed?
     assert subject.dynamo_changed?
   end
+
+  should 'check if record was changed with dyn' do
+    subject.dyn['foo'] = 'barre'
+    assert subject.changed?
+    assert subject.dynamo_changed?
+  end
+
 end
 
 
