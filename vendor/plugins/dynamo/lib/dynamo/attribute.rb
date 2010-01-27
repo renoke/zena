@@ -1,6 +1,17 @@
 module Dynamo
   module Attribute
 
+    # The Dynamo::Attribute module is included in ActiveRecord model for CRUD operations
+    # on the dynamics attributes (the dynamos). These ared stored in a table field called 'dynamo'
+    # and accessed with #dynamo and dynamo= methods.
+    #
+    # The dynamo are encoded et decode with a serialization tool than you need to specify seperatly (for instance
+    # Dynamo::Serialization::Marshal).
+    #
+    # The attributes= method filter columns attributes and dynamic attributes in order to store
+    # them apart.
+    #
+
     module InstanceMethods
 
       def dynamo
@@ -17,24 +28,24 @@ module Dynamo
 
       alias_method :dyn=, :dynamo=
 
-      def attributes_with_dynamo=(new_attributes, guard_protected_attributes = true)
-        column_attributes, dynamo_attributes = {}, {}
-        columns = self.class.column_names
-
-        new_attributes.each do |k,v|
-          if columns.include?(k)
-            column_attributes[k] = v
-          else
-            dynamo_attributes[k] = v
-          end
-        end
-        self.attributes_without_dynamo=(column_attributes) unless column_attributes.empty?
-
-        merge_dynamo(dynamo_attributes)
-        encode_dynamo
-      end
-
       private
+
+        def attributes_with_dynamo=(new_attributes, guard_protected_attributes = true)
+          column_attributes, dynamo_attributes = {}, {}
+          columns = self.class.column_names
+
+          new_attributes.each do |k,v|
+            if columns.include?(k)
+              column_attributes[k] = v
+            else
+              dynamo_attributes[k] = v
+            end
+          end
+          self.attributes_without_dynamo=(column_attributes) unless column_attributes.empty?
+
+          merge_dynamo(dynamo_attributes)
+          encode_dynamo
+        end
 
         def encode_dynamo
           write_attribute('dynamo', encode(@dynamo))
