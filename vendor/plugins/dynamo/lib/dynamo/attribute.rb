@@ -15,14 +15,14 @@ module Dynamo
     module InstanceMethods
 
       def dynamo
-        @dynamo || decode_dynamo
+        @dynamo ||= decode(read_attribute('dynamo'))
       end
 
       alias_method :dyn, :dynamo
 
-      def dynamo=(new_attributes)
-        check_kind_of_hash(new_attributes)
-        @dynamo = new_attributes
+      def dynamo=(value)
+        check_kind_of_hash(value)
+        @dynamo = value
         encode_dynamo
       end
 
@@ -51,10 +51,6 @@ module Dynamo
           write_attribute('dynamo', encode(@dynamo))
         end
 
-        def decode_dynamo
-          decode(@attributes['dynamo'])
-        end
-
         def check_kind_of_hash(data)
           raise TypeError, 'Argument is not Hash' unless data.kind_of?(Hash)
         end
@@ -69,7 +65,6 @@ module Dynamo
           changed_without_dynamo
         end
 
-      protected
 
         def merge_dynamo(new_attributes)
           if @dynamo && !@dynamo.nil? && @dynamo.kind_of?(Hash)
@@ -79,14 +74,21 @@ module Dynamo
           end
         end
 
+        def changed_attributes_with_dynamo
+          encode_dynamo
+          changed_attributes_without_dynamo
+        end
+
     end
 
     def self.included(receiver)
       receiver.send :include, InstanceMethods
       receiver.send :alias_method_chain, :attributes=,  :dynamo
-      receiver.send :alias_method_chain, :changed,     :dynamo
-      receiver.send :alias_method_chain, :changed?,     :dynamo
-      receiver.send :before_save, :encode_dynamo
+      # receiver.send :alias_method_chain, :write_attribute,  :dynamo
+      # receiver.send :alias_method_chain, :changed,      :dynamo
+      # receiver.send :alias_method_chain, :changed?,     :dynamo
+      # receiver.send :alias_method_chain, :changed_attributes,  :dynamo
+      # receiver.send :before_save, :encode_dynamo
     end
   end
 end
