@@ -23,7 +23,7 @@ module Dynamo
       def dynamo=(value)
         check_kind_of_hash(value)
         @dynamo = value
-        encode_dynamo
+        #encode_dynamo
       end
 
       alias_method :dyn=, :dynamo=
@@ -44,7 +44,7 @@ module Dynamo
           self.attributes_without_dynamo=(column_attributes) unless column_attributes.empty?
 
           merge_dynamo(dynamo_attributes)
-          encode_dynamo
+          #encode_dynamo
         end
 
         def encode_dynamo
@@ -53,16 +53,6 @@ module Dynamo
 
         def check_kind_of_hash(data)
           raise TypeError, 'Argument is not Hash' unless data.kind_of?(Hash)
-        end
-
-        def changed_with_dynamo?
-          encode_dynamo
-          changed_without_dynamo?
-        end
-
-        def changed_with_dynamo
-          encode_dynamo
-          changed_without_dynamo
         end
 
 
@@ -74,21 +64,13 @@ module Dynamo
           end
         end
 
-        def changed_attributes_with_dynamo
-          encode_dynamo
-          changed_attributes_without_dynamo
-        end
-
     end
 
     def self.included(receiver)
       receiver.send :include, InstanceMethods
+      receiver.send :include, ::Dynamo::Dirty
       receiver.send :alias_method_chain, :attributes=,  :dynamo
-      # receiver.send :alias_method_chain, :write_attribute,  :dynamo
-      # receiver.send :alias_method_chain, :changed,      :dynamo
-      # receiver.send :alias_method_chain, :changed?,     :dynamo
-      # receiver.send :alias_method_chain, :changed_attributes,  :dynamo
-      # receiver.send :before_save, :encode_dynamo
+      receiver.send :before_save, :encode_dynamo
     end
   end
 end

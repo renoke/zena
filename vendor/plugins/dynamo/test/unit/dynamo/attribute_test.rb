@@ -190,35 +190,4 @@ class TestAttribute < Test::Unit::TestCase
   end
 
 
-context 'Dirty' do
-  setup do
-    @version = Version.create('title'=>'test', 'foo' => 'bar')
-  end
-
-  subject { @version }
-
-  should 'check if record was changed with column attributes' do
-    assert !subject.changed?
-    subject.title= 'change test'
-    assert subject.changed?
-    assert subject.title_changed?
-    assert_equal 'test', subject.title_was
-  end
-
-  should 'check if record was changed with dynamo=' do
-    subject.dynamo={'foo'=>'barre'}
-    assert subject.changed?
-    assert subject.dynamo_changed?
-  end
-
-  should 'check if record was changed with dyn' do
-    subject.dyn['foo'] = 'barre'
-    assert subject.changed?
-    assert subject.dynamo_changed?
-  end
-
-end
-
-
-
 end
