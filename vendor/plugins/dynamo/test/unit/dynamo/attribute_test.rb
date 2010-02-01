@@ -6,7 +6,7 @@ class TestAttribute < Test::Unit::TestCase
   context 'Write dynamic attributes with dynamo=' do
     setup do
       @version = Version.new
-      subject.dynamo={'foo'=>'bar'}
+      @version.dynamo={'foo'=>'bar'}
     end
 
     subject { @version }
@@ -33,8 +33,26 @@ class TestAttribute < Test::Unit::TestCase
       assert_equal 'bravo', subject.dynamo['b']
       assert_equal 'charlie', subject.dynamo['c']
     end
-
   end
+
+  context 'Write attribute with dyn[]=' do
+    should 'write a dynamo before creation' do
+      subject = Version.new('foo'=>'bar')
+      subject.dyn['foo'] = 'babar'
+      assert_equal 'babar', subject.dyn['foo']
+      subject.save
+      assert_equal 'babar', subject.dyn['foo']
+    end
+
+    should 'write a dynamo after creation' do
+      subject = Version.create('foo'=>'bar')
+      subject.dyn['foo'] = 'babar'
+      assert_equal 'babar', subject.dyn['foo']
+      subject.save
+      assert_equal 'babar', subject.dyn['foo']
+    end
+  end
+
 
   context 'Read dynamic attributes with dynamo' do
     setup do
@@ -87,11 +105,9 @@ class TestAttribute < Test::Unit::TestCase
       assert_equal 'test', subject.title
       assert_equal Hash['foo'=>'bar'], subject.dyn
     end
-
   end
 
   context 'Initialisation' do
-
     should 'initialize columns attributes and dynamic attributes with hash' do
       subject = Version.new('title'=>'test', 'foo' => 'bar')
       assert_equal 'test', subject.title
@@ -109,11 +125,9 @@ class TestAttribute < Test::Unit::TestCase
       assert_nil subject.title
       assert_equal 'bar', subject.dynamo['foo']
     end
-
   end
 
   context 'Persistence' do
-
     setup do
       @version = Version.new('title'=>'test', 'foo' => 'bar')
       assert @version.save
@@ -174,7 +188,6 @@ class TestAttribute < Test::Unit::TestCase
       assert subject.destroyed?
       assert subject.frozen?
     end
-
   end
 
   context 'Find' do
@@ -188,5 +201,14 @@ class TestAttribute < Test::Unit::TestCase
     end
   end
 
+  context 'Reload' do
+    should 'return dynamo stored in database' do
+      subject=Version.create('title'=>'find me', 'foo' => 'bar')
+      subject.dyn['foo'] = 'barab'
+      assert_equal 'barab', subject.dyn['foo']
+      subject.dynamo!
+      assert_equal 'bar', subject.dyn['foo']
+    end
+  end
 
 end

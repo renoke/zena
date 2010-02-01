@@ -15,16 +15,10 @@ module Dynamo
     module InstanceMethods
 
       def dynamo
-        # @original_dynamo is used by Dirty Module to look for difference between
-        # original and actual value.
         @dynamo ||= decode(read_attribute('dynamo'))
       end
 
       alias_method :dyn, :dynamo
-
-      def dynamo!
-         @dynamo = decode(read_attribute('dynamo'))
-      end
 
       def dynamo=(value)
         check_kind_of_hash(value)
@@ -32,6 +26,15 @@ module Dynamo
       end
 
       alias_method :dyn=, :dynamo=
+
+
+      def dynamo!
+         @dynamo = decode(read_attribute('dynamo'))
+      end
+
+      def dynamo?
+        self.respond_to(:dynamo)
+      end
 
       private
 
@@ -49,7 +52,6 @@ module Dynamo
           self.attributes_without_dynamo=(column_attributes) unless column_attributes.empty?
 
           merge_dynamo(dynamo_attributes)
-          #encode_dynamo
         end
 
         def encode_dynamo
