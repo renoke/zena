@@ -2,12 +2,13 @@
 class Employee < ActiveRecord::Base
   include Dynamo::Attribute
   include Dynamo::Serialization::Marshal
-  #dynamo :first_name, String
-  #dynamo :last_name, String
+  dynamo :first_name, String, :indexed => true, :default=>''
+  dynamo :last_name, String, :indexed => true, :default=>''
+  dynamo :age, Float
 end
 
 class Developer < Employee
-  #dynamo :skill, String
+  dynamo :language, String
 end
 
 class WebDeveloper < Developer
@@ -39,9 +40,9 @@ begin
     end
   end
 
-  ActiveRecord::Base.establish_connection(:adapter=>'mysql', :database=>'dynamo_test')
+  ActiveRecord::Base.establish_connection(:adapter=>'sqlite3', :database=>':memory:')
   ActiveRecord::Migration.verbose = false
-  DynamoMigration.migrate(:down)
+  #DynamoMigration.migrate(:down)
   DynamoMigration.migrate(:up)
   ActiveRecord::Migration.verbose = true
 end
