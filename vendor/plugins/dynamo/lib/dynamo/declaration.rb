@@ -2,20 +2,23 @@ module Dynamo
   module Declaration
     module ClassMethods
 
-      def dynamo(name, type, options)
-        prop = Property.new(name, type, options)
+      def dynamo(name, type, options={})
+        prop = Dynamo::Property.new(name, type, options)
+        if dynamos[name].blank?
+          dynamos[name] = prop
+        end
       end
 
-      def properties
-        @properties ||= if parent
-          parent.keys.dup
+      def dynamos
+        @dynamos ||= if parent = parent_model
+          parent.dynamos.dup
         else
           Hash.new
         end
       end
 
-      def parent
-        (ancestors - [self]).find do |parent|
+      def parent_model
+        (ancestors - [self, Dynamo::Attribute]).find do |parent|
           parent.include?(Dynamo::Attribute)
         end
       end
@@ -29,6 +32,7 @@ module Dynamo
     def self.included(receiver)
       receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
+      receiver.send :before_validation, Dynamo::Validator.new
     end
   end
 end
