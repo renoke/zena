@@ -27,12 +27,21 @@ module Dynamo
 
     module InstanceMethods
 
+      protected
+
+        def dynamos_must_be_declared
+          dynamo_declared = self.class.dynamos
+          @dynamo.each do |dyn, value|
+            errors.add("#{dyn}", "is not declared") unless dynamo_declared.has_key? dyn
+          end
+        end
+
     end
 
     def self.included(receiver)
       receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
-      receiver.send :before_validation, Dynamo::Validator.new
+      receiver.send :validate, :dynamos_must_be_declared
     end
   end
 end
