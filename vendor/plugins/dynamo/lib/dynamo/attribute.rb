@@ -15,15 +15,20 @@ module Dynamo
     module InstanceMethods
 
       def dynamo
-        @dynamo ||= decode(read_attribute('dynamo'))
+        # @original_dynamo is used by Dirty Module to loof for difference between
+        # original and actual value.
+        @dynamo ||= @original_dynamo = decode(read_attribute('dynamo'))
       end
 
       alias_method :dyn, :dynamo
 
+      def dynamo!
+         @dynamo = @original_dynamo = decode(read_attribute('dynamo'))
+      end
+
       def dynamo=(value)
         check_kind_of_hash(value)
         @dynamo = value
-        #encode_dynamo
       end
 
       alias_method :dyn=, :dynamo=
@@ -68,6 +73,7 @@ module Dynamo
 
     def self.included(receiver)
       receiver.send :include, InstanceMethods
+      #receiver.send :include, ::Dynamo::Declaration
       receiver.send :include, ::Dynamo::Dirty
       receiver.send :alias_method_chain, :attributes=,  :dynamo
       receiver.send :before_save, :encode_dynamo

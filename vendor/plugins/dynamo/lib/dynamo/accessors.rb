@@ -1,5 +1,6 @@
 module Dynamo
   module Accessors
+    #This Module is not actualy used.
     module ClassMethods
 
       def dynamo(name, type, options={})

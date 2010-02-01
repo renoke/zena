@@ -1,3 +1,0 @@
-class Dynamo < Hash
-
-end

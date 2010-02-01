@@ -42,13 +42,12 @@ module Dynamo
       end
 
       def changed_dynamos
-        old = decode(read_attribute('dynamo'))
+        old = @original_dynamo || decode(read_attribute('dynamo'))
         dynamo_changed = {}
 
         #look for updated value
         @dynamo.each do |dynamo,new_value|
-          old_value = old.delete(dynamo)
-          if new_value != old_value
+          if new_value != old_value = old.delete(dynamo)
             dynamo_changed[dynamo] = [old_value, new_value]
           end
         end
@@ -59,6 +58,10 @@ module Dynamo
         end
 
         dynamo_changed
+
+        #@dynamo.delete_if{ |k,v| old[k] == v }.merge(old.delete_if{|k,v| @dynamo.has_key?(k)})
+
+
       end
 
   end

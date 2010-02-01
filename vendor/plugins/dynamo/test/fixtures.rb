@@ -1,13 +1,17 @@
 
 class Employee < ActiveRecord::Base
-  include Dynamo::Accessors
+  include Dynamo::Attribute
   include Dynamo::Serialization::Marshal
-  dynamo :first_name, String
-  dynamo :last_name, String
+  #dynamo :first_name, String
+  #dynamo :last_name, String
 end
 
 class Developer < Employee
-  dynamo :skill, String
+  #dynamo :skill, String
+end
+
+class WebDeveloper < Developer
+
 end
 
 class Version < ActiveRecord::Base
