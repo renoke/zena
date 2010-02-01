@@ -19,10 +19,7 @@ class DeclarationDirty < Test::Unit::TestCase
   end
 
   context 'dynamos' do
-    should 'return an empty Hash by default' do
-      AnonClass = Class.new(Version)
-      assert_equal Hash[], AnonClass.dynamos
-    end
+
 
     should 'return list of dynamo properties when declared' do
       assert_kind_of Hash, Employee.dynamos
