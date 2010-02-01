@@ -18,6 +18,9 @@ end
 class Version < ActiveRecord::Base
   include Dynamo::Attribute
   include Dynamo::Serialization::Marshal
+  dynamo 'foo', String
+  dynamo 'tic', String
+  dynamo 'comment', String
 end
 
 begin
@@ -28,6 +31,7 @@ begin
     end
     def self.up
       create_table "employees" do |t|
+        t.string "type"
         t.text   "dynamo"
       end
 
@@ -36,6 +40,10 @@ begin
         t.string  "title"
         t.string  "comment"
         t.timestamps
+      end
+
+      create_table "dummies" do |t|
+        t.text     "dynamo"
       end
     end
   end
