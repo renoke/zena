@@ -1,8 +1,6 @@
 require 'test_helper'
 require 'fixtures'
 
-
-
 class TestAttribute < Test::Unit::TestCase
 
   context 'Write dynamic attributes with dynamo=' do
