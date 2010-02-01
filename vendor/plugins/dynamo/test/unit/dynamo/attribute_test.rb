@@ -1,6 +1,8 @@
 require 'test_helper'
 require 'fixtures'
 
+
+
 class TestAttribute < Test::Unit::TestCase
 
   context 'Write dynamic attributes with dynamo=' do
@@ -57,7 +59,7 @@ class TestAttribute < Test::Unit::TestCase
   context 'Read dynamic attributes with dynamo' do
     setup do
       @version = Version.new
-      subject.dynamo={'foo'=>'bar', :tic=>:tac}
+      @version.dynamo={'foo'=>'bar', :tic=>:tac}
     end
 
     subject { @version }
