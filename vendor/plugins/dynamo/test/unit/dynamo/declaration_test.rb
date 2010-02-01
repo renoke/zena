@@ -1,6 +1,8 @@
 require 'test_helper'
 require 'fixtures'
 
+
+
 class DeclarationDirty < Test::Unit::TestCase
 
   context 'Parent model' do
@@ -18,18 +20,108 @@ class DeclarationDirty < Test::Unit::TestCase
     end
   end
 
-  context 'dynamos' do
+  context 'Dynamo declration' do
+    Superhero = Class.new(ActiveRecord::Base) do
+      include Dynamo::Attribute
+      include Dynamo::Serialization::Marshal
+    end
 
+    should 'create Dynamo::Proprety object' do
+      subject = Superhero.dynamo('weapon', String)
+      assert_kind_of Dynamo::Property, subject
+      assert_equal 'weapon', subject.name
+      assert_equal String, subject.data_type
+    end
 
-    should 'return list of dynamo properties when declared' do
+    should 'allow default value option' do
+      subject = Superhero.dynamo('force', Numeric, :default=> 10)
+      assert_equal 10, subject.default
+    end
+
+    should 'allow indexed option' do
+      subject = Superhero.dynamo('name', String, :indexed=> true)
+      assert subject.indexed
+    end
+  end
+
+  context 'Declared dynamos' do
+    Dummy = Class.new(ActiveRecord::Base) do
+      set_table_name 'dummies'
+      include Dynamo::Attribute
+      include Dynamo::Serialization::Marshal
+    end
+
+    should 'return empty Hash if no dynamos declared' do
+      assert_equal Hash[], Dummy.dynamos
+      assert_equal Hash[], Dummy.new.dynamos_declared
+    end
+
+    should 'return list of Dynamo::Property object from class' do
       assert_kind_of Hash, Employee.dynamos
       assert_kind_of Dynamo::Property, Employee.dynamos[:first_name]
     end
 
-    should 'return parents dynamo' do
-      assert_equal :first_name, Developer.dynamos[:first_name].name
+    should 'return list of Dynamo::Property object from instance' do
+      assert_kind_of Hash, Employee.new.dynamos_declared
+      assert_kind_of Dynamo::Property, Employee.new.dynamos_declared[:first_name]
     end
   end
+
+  context 'dynamo_property_for!' do
+
+    subject {Employee.new}
+
+    should 'return property if property exist' do
+      assert_equal :first_name, subject.dynamo_property_for!(:first_name).name
+    end
+
+    should 'raise NameError if property doesnt exist' do
+      assert_raise(NameError) { subject.dynamo_property_for!(:nothing) }
+    end
+
+  end
+
+  context 'Dynamo declaration missing' do
+    Pirate = Class.new(ActiveRecord::Base) do
+      set_table_name 'dummies'
+      include Dynamo::Attribute
+      include Dynamo::Serialization::Marshal
+    end
+
+    subject { Pirate.create(:foo=>'bar')}
+
+    should 'render object invalid ' do
+      assert subject.invalid?
+    end
+
+    should 'return message error' do
+      assert_contains subject.errors.full_messages, 'Foo dynamo is not declared'
+    end
+
+  end
+
+  context 'Wrong data type' do
+    Duck = Class.new(ActiveRecord::Base) do
+      set_table_name 'dummies'
+      include Dynamo::Attribute
+      include Dynamo::Serialization::Marshal
+      dynamo :cack, String
+    end
+
+    subject { Duck.create(:cack=>10)}
+
+    should 'render object invalid' do
+      assert subject.invalid?
+    end
+
+    should 'return message error' do
+      assert_does_not_contain subject.errors.full_messages, 'Cack dynamo is not declared'
+      assert_contains subject.errors.full_messages, 'Cack dynamo has wrong data type'
+    end
+  end
+
+
+
 
 
 end
