@@ -1,11 +1,12 @@
 module Dynamo
   class Property
-    attr_accessor :name, :type, :options, :default_value
+    attr_accessor :name, :type, :options, :default, :indexed
 
     def initialize(name, type, options={})
       @name, @type = name, type
-      self.options = options.symbolize_keys
-      self.default_value = self.options.delete(:default)
+      self.default = options.delete(:default)
+      self.indexed = options.delete(:indexed)
+      self.options = options
     end
 
     def ==(other)
