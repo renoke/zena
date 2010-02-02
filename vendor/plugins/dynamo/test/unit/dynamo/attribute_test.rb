@@ -211,4 +211,64 @@ class TestAttribute < Test::Unit::TestCase
     end
   end
 
+  context 'Type cast' do
+    DataType = Class.new(ActiveRecord::Base) do
+      set_table_name 'dummies'
+      include Dynamo::Attribute
+      include Dynamo::Serialization::Marshal
+      dynamo 'mystring', String
+      dynamo 'myarray', Array
+      dynamo 'myinteger', Integer
+      dynamo 'myfloat', Float
+      dynamo 'myhash', Hash
+      dynamo 'myrange', Range
+      dynamo 'mysymbol', Symbol
+    end
+
+    should 'save & read String' do
+      assert subject = DataType.create('mystring'=>'some string')
+      subject.reload
+      assert_kind_of String, subject.dyn['mystring']
+    end
+
+    should 'save & read Array' do
+      assert subject = DataType.create('myarray'=>[1,:a,'3'])
+      subject.reload
+      assert_kind_of Array, subject.dyn['myarray']
+    end
+
+    should 'save & read Integer' do
+      assert subject = DataType.create('myinteger'=>123)
+      subject.reload
+      assert_kind_of Integer, subject.dyn['myinteger']
+    end
+
+    should 'save & read Float' do
+      assert subject = DataType.create('myfloat'=>12.3)
+      subject.reload
+      assert_kind_of Float, subject.dyn['myfloat']
+    end
+
+    should 'save & read Hash' do
+      assert subject = DataType.create('myhash'=>{:a=>'a', :b=>2})
+      subject.reload
+      assert_kind_of Hash, subject.dyn['myhash']
+    end
+
+    should 'save & read Range' do
+      assert subject = DataType.create('myrange'=>(-1..-5))
+      subject.reload
+      assert_kind_of Range, subject.dyn['myrange']
+    end
+
+    should 'save & read Symbol' do
+      assert subject = DataType.create('mysymbol'=>:abc)
+      subject.reload
+      assert_kind_of Symbol, subject.dyn['mysymbol']
+    end
+
+
+  end
+
+
 end
