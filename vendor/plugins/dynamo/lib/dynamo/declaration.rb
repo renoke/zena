@@ -16,7 +16,7 @@ module Dynamo
         @dynamos ||= if parent = parent_model
           parent.dynamos.dup
         else
-          Hash.new
+          HashWithIndifferentAccess.new
         end
       end
 

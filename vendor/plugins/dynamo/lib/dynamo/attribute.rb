@@ -42,7 +42,7 @@ module Dynamo
           columns = self.class.column_names
 
           new_attributes.each do |k,v|
-            if columns.include?(k)
+            if columns.include?(k.to_s)
               column_attributes[k] = v
             else
               dynamo_attributes[k] = v
