@@ -20,7 +20,7 @@ class DeclarationDirty < Test::Unit::TestCase
     end
   end
 
-  context 'Dynamo declration' do
+  context 'Dynamo declaration' do
     Superhero = Class.new(ActiveRecord::Base) do
       include Dynamo::Attribute
       include Dynamo::Serialization::Marshal
@@ -67,20 +67,6 @@ class DeclarationDirty < Test::Unit::TestCase
     end
   end
 
-  context 'dynamo_property_for!' do
-
-    subject {Employee.new}
-
-    should 'return property if property exist' do
-      assert_equal :first_name, subject.dynamo_property_for!(:first_name).name
-    end
-
-    should 'raise NameError if property doesnt exist' do
-      assert_raise(NameError) { subject.dynamo_property_for!(:nothing) }
-    end
-
-  end
-
   context 'Dynamo declaration missing' do
     Pirate = Class.new(ActiveRecord::Base) do
       set_table_name 'dummies'
@@ -116,7 +102,7 @@ class DeclarationDirty < Test::Unit::TestCase
 
     should 'return message error' do
       assert_does_not_contain subject.errors.full_messages, 'Cack dynamo is not declared'
-      assert_contains subject.errors.full_messages, 'Cack dynamo has wrong data type'
+      assert_contains subject.errors.full_messages, 'Cack dynamo has wrong data type. Received Fixnum, expected String'
     end
   end
 
