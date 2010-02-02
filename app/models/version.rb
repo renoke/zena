@@ -7,9 +7,12 @@ class Version < ActiveRecord::Base
 
   belongs_to            :user
 
-  attr_protected :node_id
+  validates_presence_of :node_id
+
+  attr_protected :node_id, :site_id, :content_id
 
   before_create :set_site_id
+
 
   def author
     user.contact
