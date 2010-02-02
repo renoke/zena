@@ -46,15 +46,19 @@ module Dynamo
         dynamo_changed = {}
 
         #look for updated value
-        @dynamo.each do |dynamo,new_value|
-          if new_value != old_value = original_dynamo.delete(dynamo)
-            dynamo_changed[dynamo] = [old_value, new_value]
+        if dynamo && original_dynamo
+          dynamo.each do |dynamo,new_value|
+            if new_value != old_value = original_dynamo.delete(dynamo)
+              dynamo_changed[dynamo] = [old_value, new_value]
+            end
           end
         end
 
         #look for deleted value
-        original_dynamo.each do |old_dynamo, old_value|
-          dynamo_changed[old_dynamo] = [old_value, '']
+        if original_dynamo
+          original_dynamo.each do |old_dynamo, old_value|
+            dynamo_changed[old_dynamo] = [old_value, '']
+          end
         end
 
         dynamo_changed
