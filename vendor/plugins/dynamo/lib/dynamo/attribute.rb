@@ -15,7 +15,7 @@ module Dynamo
     module InstanceMethods
 
       def dynamo
-        @dynamo ||= decode(read_attribute('dynamo'))
+        @dynamo ||= decode_dynamo
       end
 
       alias_method :dyn, :dynamo
@@ -29,7 +29,7 @@ module Dynamo
 
 
       def dynamo!
-         @dynamo = decode(read_attribute('dynamo'))
+         @dynamo = decode_dynamo
       end
 
       def dynamo?
@@ -52,6 +52,10 @@ module Dynamo
           self.attributes_without_dynamo=(column_attributes) unless column_attributes.empty?
 
           merge_dynamo(dynamo_attributes)
+        end
+
+        def decode_dynamo
+          decode(read_attribute('dynamo'))
         end
 
         def encode_dynamo
