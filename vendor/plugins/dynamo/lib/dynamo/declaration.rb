@@ -35,7 +35,7 @@ module Dynamo
       protected
 
         def dynamo_property_validation
-          @dynamo.each do |dyn, value|
+          dynamo.each do |dyn, value|
             declaration_validation(dyn)
             data_type_validation(dyn, value)
           end
@@ -59,7 +59,7 @@ module Dynamo
     def self.included(receiver)
       receiver.extend         ClassMethods
       receiver.send :include, InstanceMethods
-      receiver.send :validate, :dynamo_property_validation
+      receiver.send :validate, :dynamo_property_validation, :if=>:dynamo
     end
 
   end # Declaration
