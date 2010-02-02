@@ -3,6 +3,7 @@ class Version < ActiveRecord::Base
   include Zena::Use::Attachment
   include Zena::Use::MultiVersion::Version
   include Zena::Use::Workflow::Version
+  include Dynamo::Attribute
 
   before_create :set_site_id
 
