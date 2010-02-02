@@ -31,23 +31,28 @@ module Dynamo
         @dynamos_declared ||= self.class.dynamos
       end
 
-      def dynamo_property_for!(name)
-         dynamos_declared[name] || raise(NameError)
-      end
-
       protected
 
         def dynamo_property_validation
           @dynamo.each do |dyn, value|
-            self.errors.add("#{dyn}", "dynamo is not declared") unless dynamos_declared.has_key?(dyn)
-            self.errors.add("#{dyn}", "dynamo has wrong data type") unless valid_data_type_for?(dyn)
+            declaration_validation(dyn)
+            data_type_validation(dyn, value)
           end
         end
 
-        def valid_data_type_for?(dyn)
-          dynamos_declared.has_key?(dyn) && dyn.kind_of?(dynamos_declared[dyn].data_type)
+        def declaration_validation(dyn)
+          unless dynamos_declared.has_key?(dyn)
+            errors.add("#{dyn}", "dynamo is not declared")
+          end
         end
 
+        def data_type_validation(dyn, value)
+          if declared_dyn = dynamos_declared[dyn]
+            if !value.kind_of?( type = declared_dyn.data_type)
+              errors.add("#{dyn}", "dynamo has wrong data type. Received #{value.class}, expected #{type}")
+            end
+          end
+        end
 
     end
 
