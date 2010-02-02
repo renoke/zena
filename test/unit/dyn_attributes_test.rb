@@ -131,7 +131,7 @@ class DynAttributesTest < Test::Unit::TestCase
     end
   end
 
-  context 'Wiht inheritence' do
+  context 'With inheritence' do
     should 'child class be able to create parent dynamos' do
       assert record = ChildDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :color=>'red', :life => 'in love')
       assert_equal 'red', record.dyn[:color]
