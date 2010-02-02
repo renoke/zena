@@ -79,6 +79,7 @@ module Dynamo
 
     def self.included(receiver)
       receiver.send :include, InstanceMethods
+      receiver.send :include, ::Dynamo::Serialization::Marshal
       receiver.send :include, ::Dynamo::Declaration
       receiver.send :include, ::Dynamo::Dirty
       receiver.send :alias_method_chain, :attributes=,  :dynamo

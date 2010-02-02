@@ -3,6 +3,21 @@ require 'fixtures'
 
 class TestAttribute < Test::Unit::TestCase
 
+  context 'Module inclusion' do
+    should 'include Serialization::Marshal' do
+      assert Version.include?(Dynamo::Serialization::Marshal)
+    end
+
+    should 'include Dirty' do
+      assert Version.include?(Dynamo::Dirty)
+    end
+
+    should 'include Declaration' do
+      assert Version.include?(Dynamo::Declaration)
+    end
+  end
+
+
   context 'Write dynamic attributes with dynamo=' do
     setup do
       @version = Version.new
@@ -215,7 +230,6 @@ class TestAttribute < Test::Unit::TestCase
     DataType = Class.new(ActiveRecord::Base) do
       set_table_name 'dummies'
       include Dynamo::Attribute
-      include Dynamo::Serialization::Marshal
       dynamo 'mystring', String
       dynamo 'myarray', Array
       dynamo 'myinteger', Integer

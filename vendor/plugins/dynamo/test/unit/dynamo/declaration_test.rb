@@ -23,7 +23,6 @@ class DeclarationDirty < Test::Unit::TestCase
   context 'Dynamo declaration' do
     Superhero = Class.new(ActiveRecord::Base) do
       include Dynamo::Attribute
-      include Dynamo::Serialization::Marshal
     end
 
     should 'create Dynamo::Proprety object' do
@@ -48,7 +47,6 @@ class DeclarationDirty < Test::Unit::TestCase
     Dummy = Class.new(ActiveRecord::Base) do
       set_table_name 'dummies'
       include Dynamo::Attribute
-      include Dynamo::Serialization::Marshal
     end
 
     should 'return empty Hash if no dynamos declared' do
@@ -71,7 +69,6 @@ class DeclarationDirty < Test::Unit::TestCase
     Pirate = Class.new(ActiveRecord::Base) do
       set_table_name 'dummies'
       include Dynamo::Attribute
-      include Dynamo::Serialization::Marshal
     end
 
     subject { Pirate.create(:foo=>'bar')}
@@ -90,7 +87,6 @@ class DeclarationDirty < Test::Unit::TestCase
     Duck = Class.new(ActiveRecord::Base) do
       set_table_name 'dummies'
       include Dynamo::Attribute
-      include Dynamo::Serialization::Marshal
       dynamo :cack, String
     end
 

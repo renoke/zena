@@ -1,7 +1,6 @@
 
 class Employee < ActiveRecord::Base
   include Dynamo::Attribute
-  include Dynamo::Serialization::Marshal
   dynamo :first_name, String, :indexed => true, :default=>''
   dynamo :last_name, String, :indexed => true, :default=>''
   dynamo :age, Float
@@ -17,7 +16,6 @@ end
 
 class Version < ActiveRecord::Base
   include Dynamo::Attribute
-  include Dynamo::Serialization::Marshal
   dynamo 'foo', String
   dynamo 'tic', String
   dynamo 'comment', String
