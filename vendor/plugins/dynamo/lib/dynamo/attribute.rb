@@ -13,7 +13,6 @@ module Dynamo
     #
 
     module InstanceMethods
-
       def dynamo
         @dynamo ||= decode_dynamo
       end
@@ -74,8 +73,7 @@ module Dynamo
             @dynamo = new_attributes
           end
         end
-
-    end
+    end # InstanceMethods
 
     def self.included(receiver)
       receiver.send :include, InstanceMethods
@@ -85,5 +83,6 @@ module Dynamo
       receiver.send :alias_method_chain, :attributes=,  :dynamo
       receiver.send :before_save, :encode_dynamo
     end
-  end
-end
+
+  end # Attribute
+end # Dynamo

@@ -102,6 +102,18 @@ class DeclarationDirty < Test::Unit::TestCase
     end
   end
 
+  context 'Default value' do
+    Cat = Class.new(ActiveRecord::Base) do
+      set_table_name 'dummies'
+      include Dynamo::Attribute
+      dynamo :eat, String, :default=>'mouse'
+      dynamo :name, String
+    end
+
+    should 'should create dynamo' do
+
+    end
+  end
 
 
 

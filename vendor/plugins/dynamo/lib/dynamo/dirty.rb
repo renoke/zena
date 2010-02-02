@@ -58,11 +58,6 @@ module Dynamo
         end
 
         dynamo_changed
-
-        #@dynamo.delete_if{ |k,v| old[k] == v }.merge(old.delete_if{|k,v| @dynamo.has_key?(k)})
-
-
       end
-
-  end
-end
+  end # Dirty
+end # Dynamo

@@ -40,7 +40,6 @@ class TestDirty < Test::Unit::TestCase
       assert subject.changed?
       assert subject.dynamo_changed?
     end
-
   end
 
 
@@ -87,8 +86,6 @@ class TestDirty < Test::Unit::TestCase
       @version.attributes=({'title'=>'dirty', 'foo'=>'barre'})
       assert_equal Hash["title"=>["test", "dirty"], "foo"=>["bar", "barre"]], @version.changes
     end
-
   end
-
 
 end
