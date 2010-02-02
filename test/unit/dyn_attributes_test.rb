@@ -3,8 +3,10 @@ require 'test_helper'
 class DynDummy < ActiveRecord::Base
   before_save :set_dummy_node_id
   set_table_name 'versions'
-  include Zena::Use::DynAttributes::ModelMethods
-  dynamic_attributes_setup :nested_alias => {%r{^d_(\w+)} => ['dyn']}
+  #include Zena::Use::DynAttributes::ModelMethods
+  #dynamic_attributes_setup :nested_alias => {%r{^d_(\w+)} => ['dyn']}
+  include Dynamo::Core
+  include Dynamo::Serialization::Marshal
 
   def set_dummy_node_id
     self[:node_id] = 0
@@ -14,8 +16,10 @@ end
 
 class DynStrictDummy < ActiveRecord::Base
   set_table_name 'versions'
-  include Zena::Use::DynAttributes::ModelMethods
-  dynamic_attributes_setup :only => [:bio, :phone], :nested_alias => {%r{^d_(\w+)} => ['dyn']}
+  # include Zena::Use::DynAttributes::ModelMethods
+  # dynamic_attributes_setup :only => [:bio, :phone], :nested_alias => {%r{^d_(\w+)} => ['dyn']}
+  include Dynamo::Core
+  include Dynamo::Serialization::Marshal
 
   def before_save
     self[:node_id] = 123
@@ -37,12 +41,20 @@ end
 
 class DynAttributesTest < Test::Unit::TestCase
 
+  context 'creating an object' do
+    setup do
+      DynDummy.create(:title => 'worn-shoes', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
+    end
+
+    should_create :dyn_dummy
+  end
+
   def test_simple
     assert record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'')
     assert_nil record.dyn['color']
     record.dyn['color'] = 'blue'
     assert_equal 'blue', record.dyn['color']
-    assert_equal 'blue', record.dyn[:color]
+    assert_nil record.dyn[:color]
     assert record.save
 
     record = DynDummy.find(record[:id]) # reload
@@ -50,30 +62,18 @@ class DynAttributesTest < Test::Unit::TestCase
   end
 
   def test_many_alias_methods
-    assert DynDummy.create(:title => 'worn shoes', :text=>'', :comment=>'', :summary=>'', :d_color=>'blue', :d_life=>'fun', :d_shoes=>'worn')
-    record = DynDummy.find_by_title('worn shoes')
-    assert_equal 'worn', record.dyn.send('shoes')
-    assert_equal 'worn', record.dyn['shoes']
-    assert_equal 'blue', record.dyn.send('color')
+    record = DynDummy.create(:title => 'worn-shoes', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
+
+    #assert record = DynDummy.find_by_title('worn-shoes')
+
+    assert_equal 'worn', record.dyn[:shoes]
   end
 
-  def test_update
-    assert record = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_color=>'blue', :d_life=>'fun', :d_shoes=>'worn')
-
-    assert_equal 'blue', record.dyn['color'] # reload hash
-    proxy = record.dyn
-    keys = proxy.instance_variable_get(:@keys)
-    assert keys['color']
-    assert keys['shoes']
-    assert keys['life']
-
-    assert record.update_attributes(:d_life => 'hell', :d_heidegger => 'Martin')
-    proxy = record.dyn
-    new_keys = proxy.instance_variable_get(:@keys)
-    ['color', 'life', 'shoes'].each do |k|
-      assert_equal keys[k], new_keys[k]
-    end
-    assert_equal 'Martin', record.dyn['heidegger']
+  def test_update_attributes
+    assert record = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
+    assert record.update_attributes(:life => 'hell', :heidegger => 'Martin')
+    assert_equal 'Martin', record.dyn[:heidegger]
+    assert_equal 'blue', record.dyn[:color]
   end
 
   def test_delete
@@ -86,38 +86,10 @@ class DynAttributesTest < Test::Unit::TestCase
   end
 
   def test_delete_many
-    assert record = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_color=>'blue', :d_life=>'fun', :d_shoes=>'worn')
-    proxy = record.dyn
-    keys = proxy.instance_variable_get(:@keys)
-    assert record.update_attributes(:d_life => nil, :d_shoes => nil)
-    assert_nil record.dyn['life']
-    assert_nil AttrDummy.find_by_id(keys['life'])
-    assert_nil record.dyn['shoes']
-    assert_nil AttrDummy.find_by_id(keys['shoes'])
-  end
-
-  # DynStrictDummy
-
-  def test_only
-    assert record = DynStrictDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :d_bio=>'biography', :d_hell => 'not allowed')
-    assert_equal 'biography', record.dyn['bio']
-    assert_nil record.dyn['hell']
-    record.dyn['hell'] = 'lucifer'
-    record.dyn['hell'] = 'master of darkness'
-    assert record.save
-    assert_nil record.dyn['hell']
-  end
-
-  def test_only_subclass
-    assert record = DynSubStrictDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :d_bio=>'biography', :d_hell => 'not allowed')
-    assert_equal 'biography', record.dyn['bio']
-    assert_nil record.dyn['hell']
-  end
-
-  def test_only_subclass_overwrite
-    assert record = DynSub2StrictDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :d_bio=>'biography', :d_hell => 'not allowed')
-    assert_nil record.dyn['bio']
-    assert_equal 'not allowed', record.dyn['hell']
+    assert record = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
+    assert record.update_attributes(:life => nil, :shoes => nil)
+    assert_nil record.dyn[:life]
+    assert_nil record.dyn[:shoes]
   end
 
   def test_each
@@ -135,46 +107,31 @@ class DynAttributesTest < Test::Unit::TestCase
   end
 
   def test_dyn_equal
-    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_color=>'blue', :d_life=>'fun', :d_shoes=>'worn')
-    proxy = record.dyn
-    keys = proxy.instance_variable_get(:@keys)
-    assert record2 = DynDummy.create(:title => 'hulk', :text=>'', :comment=>'', :summary=>'', :d_lobotomize=>'me')
-    assert_equal 'me', record2.dyn['lobotomize']
-
+    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
+    assert record2 = DynDummy.create(:title => 'hulk', :text=>'', :comment=>'', :summary=>'', :lobotomize=>'me')
     record2.dyn = record.dyn
-    assert record2.save, "Can save modified record"
+    record2.save
 
     record2 = DynDummy.find(record2[:id]) # reload
-    proxy = record2.dyn
-    new_keys = proxy.instance_variable_get(:@keys)
-    assert_equal 'blue', record2.dyn['color']
-    keys.each do |k,id|
-      assert new_keys[k]
-      assert_not_equal id, new_keys[k]
-    end
-    assert_nil record2.dyn['lobotomize']
+    assert_equal 'blue', record2.dyn[:color]
+    assert_nil record2.dyn[:lobotomize]
   end
 
   def test_dyn_update_with
-    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_color=>'blue', :d_life=>'fun', :d_shoes=>'worn')
-    proxy = record.dyn
-    keys = proxy.instance_variable_get(:@keys)
-
+    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :color=>'blue', :life=>'fun', :shoes=>'worn')
     record.dyn = {:color => 'yellow', :lobotomize=>'me'}
-    assert record.save, "Can save modified record"
+    record.save
 
     record = DynDummy.find(record[:id]) # reload
-    proxy = record.dyn
-    new_keys = proxy.instance_variable_get(:@keys)
-    assert_equal 'yellow', record.dyn['color']
-    assert_equal 'me', record.dyn['lobotomize']
-    assert_nil record.dyn['life']
-    assert_nil record.dyn['shoes']
+    assert_equal 'yellow', record.dyn[:color]
+    assert_equal 'me', record.dyn[:lobotomize]
+    assert_nil record.dyn[:life]
+    assert_nil record.dyn[:shoes]
   end
 
   def test_set_with_hash
     assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'')
-    record.dyn = {:fingers => 'hurt'}
+    record.dyn = {'fingers' => 'hurt'}
     assert record.save, "Can save"
 
     record = DynDummy.find(record[:id]) # reload
@@ -182,28 +139,25 @@ class DynAttributesTest < Test::Unit::TestCase
   end
 
   def test_delete
-    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_life=>'fun', :d_joy=>'weird')
+    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :life=>'fun', :joy=>'weird')
     assert_equal 'weird', record.dyn.delete(:joy)
-    assert_nil record.dyn['joy']
+    assert_nil record.dyn[:joy]
     assert record.save
     record = DynDummy.find(record[:id]) # reload
-    assert_nil record.dyn['joy']
-    assert_equal 'fun', record.dyn['life']
+    assert_nil record.dyn[:joy]
+    assert_equal 'fun', record.dyn[:life]
   end
 
   def test_destroy
-    assert record  = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_life=>'fun', :d_joy=>'weird')
-    assert_equal 2, DynDummy.count_by_sql("SELECT COUNT(*) FROM dyn_attributes WHERE owner_id = #{record[:id]}")
+    record = DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :life=>'fun', :joy=>'weird')
+    n = DynDummy.count
     assert record.destroy
-    assert_equal 0, DynDummy.count_by_sql("SELECT COUNT(*) FROM dyn_attributes WHERE owner_id = #{record[:id]}")
-  end
-
-  def test_empty_key_empty_value
-    assert_raise(ActiveRecord::UnknownAttributeError)  { DynDummy.create(:title => 'lolipop', :text=>'', :comment=>'', :summary=>'', :d_=>'bad', :d_og=>'') }
+    assert record.frozen?
+    assert_equal n-1, DynDummy.count
   end
 
   def test_would_edit
-   record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :d_bio=>'biography', :d_hell => 'blind love')
+   record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :bio=>'biography', :hell => 'blind love')
    assert !record.dyn.would_edit?('hell' => 'blind love', 'bio' => 'biography')
    assert  record.dyn.would_edit?('hell' => 'blind love', 'bio' => '')
    assert  record.dyn.would_edit?('hell' => 'blind love', 'fox' => 'hop')
@@ -211,19 +165,12 @@ class DynAttributesTest < Test::Unit::TestCase
   end
 
   def test_changed
-    record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :d_bio=>'biography', :d_hell => 'blind love')
+    record = DynDummy.create(:title => 'this is my title', :text=>'', :comment=>'', :summary=>'', :bio=>'biography', :hell => 'blind love')
     record = DynDummy.find(record.id) # reload
-    dyn = record.dyn
-    assert !dyn.changed?
-    dyn['bio'] = 'biography'
-    assert !dyn.changed?
-    dyn['bio'] = 'Gemüse'
-    assert dyn.changed?
-
-    record = DynDummy.find(record.id) # reload
-    dyn = record.dyn
-
-    dyn['title'] = nil
-    assert dyn.changed?
+    assert !record.dynamo.changed?
+    record.dyn['bio'] = 'biography'
+    assert !record.dyn.changed?
+    record.dyn['bio'] = 'Gemüse'
+    assert record.dyn.changed?
   end
 end
