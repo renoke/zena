@@ -132,7 +132,7 @@ module Zena
 
     def load_custom_extensions
       #FIXME: cleanup all these hacks !
-      lib_path = File.join(Zena::ROOT, 'lib')
+      lib_path = File.join(Zena::ROOT, 'lib/zena')
       Dir.foreach(File.join(lib_path, 'core_ext')) do |f|
         next unless f =~ /\.rb\Z/
         require File.join(lib_path, 'core_ext', f)
