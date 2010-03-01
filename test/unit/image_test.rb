@@ -84,7 +84,7 @@ class ImageTest < Zena::Unit::TestCase
 
   end
 
-  context 'Resizing image with a new format' do
+  context 'Resizing an image with a new format' do
     setup do
       @pv_format = Iformat['pv']
       login(:ant)
@@ -121,7 +121,7 @@ class ImageTest < Zena::Unit::TestCase
       assert_kind_of File, subject.file(@pv_format)
     end
 
-    should 'keep the original file' do
+    should 'return the original path by default' do
       assert_match /full/, subject.filepath
     end
 
@@ -131,16 +131,15 @@ class ImageTest < Zena::Unit::TestCase
 
     context 'and updating name' do
       setup do
-        @img.update_attributes(:name=>'milan')
+        @img.update_attributes(:title=>'milan')
       end
 
       should 'change node name' do
         assert_equal 'milan', subject.name
       end
 
-      should 'keep filepath of both format' do
+      should 'return the original path by default' do
         assert_match /full/, subject.filepath
-        assert_match /pv/, subject.filepath(@pv_format)
       end
     end
 
@@ -157,12 +156,11 @@ class ImageTest < Zena::Unit::TestCase
     end
   end
 
-  context 'Updating image file' do
+  context 'Updating' do
     setup do
       login(:tiger)
       @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
                                           :title=>'birdy', :file => uploaded_jpg('bird.jpg')) }
-      @img.update_attributes(:file=>uploaded_jpg('flower.jpg'))
     end
 
     teardown do
@@ -173,65 +171,60 @@ class ImageTest < Zena::Unit::TestCase
       @img
     end
 
-    should 'record be valid' do
-      assert subject.valid?
-    end
+    context 'image file' do
+      setup do
+        @img.update_attributes(:file=>uploaded_jpg('flower.jpg'))
+      end
 
-    should 'record be saved' do
-      assert !subject.new_record?
-    end
+      should 'record be valid' do
+        assert subject.valid?
+      end
 
-    should 'change file name' do
-      assert_equal 'flower.jpg', subject.filename
-    end
+      should 'record be saved' do
+        assert !subject.new_record?
+      end
 
-    should 'change filepath' do
-      assert_match /flower.jpg/, subject.filepath
-    end
+      should 'change file name' do
+        assert_equal 'flower.jpg', subject.filename
+      end
 
-    should 'change image width' do
-      assert_equal 800, subject.width
-    end
+      should 'change filepath' do
+        assert_match /flower.jpg/, subject.filepath
+      end
 
-    should 'change image height' do
-      assert_equal 800, subject.width
-    end
+      should 'change image width' do
+        assert_equal 800, subject.width
+      end
 
-    should 'change image size' do
-      assert_equal 96648, subject.size
-    end
-  end
+      should 'change image height' do
+        assert_equal 800, subject.width
+      end
 
-  context 'Updating non image file' do
-    setup do
-      login(:tiger)
-      @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
-                                          :title=>'spring', :file => uploaded_jpg('flower.jpg')) }
-      @img.update_attributes(:file=>uploaded_text('some.txt'))
-    end
+      should 'change image size' do
+        assert_equal 96648, subject.size
+      end
+    end # image file
 
-    teardown do
-      FileUtils.rm(subject.filepath) if File.exist?(subject.filepath)
-    end
+    context 'non image file' do
+      setup do
+        @img.update_attributes(:file=>uploaded_text('some.txt'))
+      end
 
-    subject do
-      @img
-    end
+      should 'not change content type' do
+        assert 'image/jpeg', subject.content_type
+      end
 
-    should 'not change content type' do
-      assert 'image/jpeg', subject.content_type
-    end
+      should 'not change file name' do
+        assert 'flower.jpg', subject.filename
+      end
 
-    should 'not change file name' do
-      assert 'flower.jpg', subject.filename
-    end
+      should 'not change file path' do
+        assert_match /bird.jpg/, subject.filepath
+      end
 
-    should 'not change file path' do
-      assert_match /flower.jpg/, subject.filepath
-    end
-
-    should 'not create a version' do
-      assert 1, subject.versions.size
+      should 'not create a version' do
+        assert 1, subject.versions.size
+      end
     end
   end
 
@@ -359,37 +352,77 @@ class ImageTest < Zena::Unit::TestCase
     end
   end
 
-
-
-  def test_create_with_small_file
-    preserving_files('/sites/test.host/data') do
-      login(:ant)
-      img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
-        :name => 'bomb.png',
-        :c_file => uploaded_png('bomb.png') )}
-      assert_kind_of Image, img
-      assert ! img.new_record?, "Not a new record"
-      assert_equal 793, img.version.content.size
-      assert img.c_file(Iformat['pv'])
+  context 'Destroying' do
+    setup do
+      login(:tiger)
     end
+
+    context 'an image with no iformats' do
+      setup do
+        @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
+                                            :title=>'albatros', :file => uploaded_jpg('bird.jpg')) }
+      end
+
+      subject{ @img}
+
+      should 'destroy version from database' do
+        assert_difference('Version.count', -1) do
+          subject.destroy
+        end
+      end
+
+      should 'destroy attachment from database' do
+        assert_difference('Attachment.count', -1) do
+          subject.destroy
+        end
+      end
+
+      should 'destroy file from file system' do
+        filepath = @img.filepath
+        subject.destroy
+        assert !File.exist?(filepath)
+      end
+    end # a document
+
+    context 'an image with iformats' do
+      setup do
+        @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
+                                            :title=>'albatros', :file => uploaded_jpg('bird.jpg')) }
+        @img.file(Iformat['pv'])
+        @img.file(Iformat['med'])
+      end
+
+      subject{ @img}
+
+
+      should 'destroy version from database' do
+        assert_difference('Version.count', -1) do
+          subject.destroy
+        end
+      end
+
+      should 'destroy attachment from database' do
+        assert_difference('Attachment.count', -1) do
+          subject.destroy
+        end
+      end
+
+      should 'destroy file from file system' do
+        full_path = @img.filepath
+        subject.destroy
+        assert !File.exist?(full_path)
+      end
+
+      should 'destroy iformat file' do
+        pv_path = @img.filepath(Iformat['pv'])
+        med_path = @img.filepath(Iformat['med'])
+        subject.destroy
+        assert !File.exist?(pv_path)
+        assert !File.exist?(med_path)
+      end
+    end # a document
   end
 
-  def test_update_same_image
-    login(:tiger)
-    bird = secure!(Node) { nodes(:bird_jpg) }
-    assert_equal Digest::MD5.hexdigest(bird.c_file.read),
-                 Digest::MD5.hexdigest(uploaded_jpg('bird.jpg').read)
-    bird.c_file.rewind
-    assert_equal 1, bird.versions.count
-    assert_equal '2006-04-11 00:00', bird.updated_at.strftime('%Y-%m-%d %H:%M')
-    assert !bird.version.would_edit?('content_attributes' => {'file' => uploaded_jpg('bird.jpg')})
-    assert bird.update_attributes(:c_file => uploaded_jpg('bird.jpg'))
-    assert_equal 1, bird.versions.count
-    assert_equal '2006-04-11 00:00', bird.updated_at.strftime('%Y-%m-%d %H:%M')
-    assert bird.update_attributes(:c_file => uploaded_jpg('flower.jpg'))
-    assert_equal 2, bird.versions.count
-    assert_not_equal '2006-04-11 00:00', bird.updated_at.strftime('%Y-%m-%d %H:%M')
-  end
 
   def test_set_event_at_from_exif_tags
     without_files('test.host/data/jpg') do
@@ -397,14 +430,14 @@ class ImageTest < Zena::Unit::TestCase
       img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
                                           :inherit => 1,
                                           :name=>'lake',
-                                          :c_file => uploaded_jpg('exif_sample.jpg')) }
-      assert_equal 'SANYO Electric Co.,Ltd.', img.c_exif['Make']
+                                          :file => uploaded_jpg('exif_sample.jpg')) }
+      assert_equal 'SANYO Electric Co.,Ltd.', img.exif['Make']
 
       # reload
-      assert img = secure!(Image) { Image.find(img.id) }
-      assert exif_tags = img.c_exif
-      assert_equal 'SANYO Electric Co.,Ltd.', img.c_exif['Make']
-      assert_equal Time.parse("1998-01-01 00:00:00"), img.c_exif.date_time
+      assert img = secure!(Image) { Image.find(img) }
+      assert exif_tags = img.exif
+      assert_equal 'SANYO Electric Co.,Ltd.', img.exif['Make']
+      assert_equal Time.parse("1998-01-01 00:00:00"), img.exif.date_time
       assert_equal Time.parse("1998-01-01 00:00:00"), img.event_at
     end
   end

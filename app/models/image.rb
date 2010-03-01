@@ -53,7 +53,7 @@ or to create a link to the article using the icon:
 
 =end
 class Image < Document
-  before_validation :image_before_validation
+  before_validation     :image_before_validation
 
   class << self
     def accept_content_type?(content_type)
@@ -97,17 +97,17 @@ class Image < Document
     end
   end
 
+  # Return the Exchangeable Image Format (Exif).
   def exif
-    @exif ||= ExifData.new(prop['exif_json'])
+    ExifData.new(prop['exif_json'])
   end
 
-  # filter attributes so there is no 'crop' with a new file
-  # def filter_attributes(attributes)
-  #   attrs = super
-  #   attrs.delete('crop') if attributes['file'] && attributes['crop']
-  #   attrs
-  # end
+  # Return the size of the image for the given format (see Image for information on format).
+  def filesize(format=nil)
+    version.filesize(format)
+  end
 
+  # Updaging image attributes and propreties. Accept also :file and :crop keys.
   def update_attributes(attributes)
     attributes.stringify_keys!
     # If file and crop attributes are both present when updating, make sur to run file= before crop=.
@@ -145,11 +145,6 @@ class Image < Document
         nil
       end
     end
-  end
-
-  # Return the size of the image for the given format (see Image for information on format)
-  def filesize(format=nil)
-    version.filesize(format)
   end
 
   def can_crop?(format)
@@ -228,11 +223,10 @@ class Image < Document
       File.open(path, "wb") { |f| f.syswrite(data.read) }
     end
 
-
-
+    # Define 2 methods :original_filename and :content_type which are compulsory for creating new file.
     def uploaded_file(file, filename = nil, content_type = nil)
       (class << file; self; end;).class_eval do
-        alias local_path path if respond_to?(:path)  # FIXME: do we need this ?
+        #alias local_path path if respond_to?(:path)  # FIXME: do we need this ?
         define_method(:original_filename) { filename }
         define_method(:content_type) { content_type }
       end
