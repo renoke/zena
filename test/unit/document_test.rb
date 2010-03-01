@@ -240,7 +240,7 @@ class DocumentTest < Zena::Unit::TestCase
     end
 
     teardown do
-      FileUtils.rm(@doc.filepath)
+      FileUtils.rm(@doc.filepath) if File.exist?(@doc.filepath)
     end
 
      context 'document attributes' do

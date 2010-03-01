@@ -123,7 +123,7 @@ class Document < Node
 
   # Get version title
   def title
-    version.title
+    @title ||= version.title
   end
 
   # Set version title name
