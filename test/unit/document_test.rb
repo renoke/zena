@@ -248,6 +248,11 @@ class DocumentTest < Zena::Unit::TestCase
          assert @doc.update_attributes(:title => 'hopla')
          assert_equal 'hopla', @doc.version.title
        end
+       
+       should 'not alter content_type' do
+         @doc.update_attributes(:title => "New title")
+         assert_equal 'application/pdf', @doc.content_type
+       end
 
        should 'not create a new attachment' do
          assert_difference('Attachment.count', 0) do
