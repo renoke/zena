@@ -102,21 +102,36 @@ class Image < Document
   end
 
   # filter attributes so there is no 'crop' with a new file
-  def filter_attributes(attributes)
-    attrs = super
-    attrs.delete('crop') if attributes['file'] && attributes['crop']
-    attrs
+  # def filter_attributes(attributes)
+  #   attrs = super
+  #   attrs.delete('crop') if attributes['file'] && attributes['crop']
+  #   attrs
+  # end
+
+  def update_attributes(attributes)
+    attributes.stringify_keys!
+    # If file and crop attributes are both present when updating, make sur to run file= before crop=.
+    if attributes['file'] && attributes['crop']
+      file = attributes.delete('file')
+      crop = attributes.delete('crop')
+      super(attributes)
+      self.file = file
+      self.crop = crop
+      save
+    else
+      super(attributes)
+    end
   end
 
   # Set content file, will refuse to accept the file if it is not an image.
   def file=(file)
-      if Zena::Use::ImageBuilder.image_content_type?(file.content_type)
-        @new_image = super
-        img = image_with_format(nil)
-        prop['width' ] = img.width
-        prop['height'] = img.height
-        prop['exif_json'] = img.exif.to_json rescue nil
-      end
+    if Zena::Use::ImageBuilder.image_content_type?(file.content_type)
+      @new_image = super
+      img = image_with_format(nil)
+      prop['width' ] = img.width
+      prop['height'] = img.height
+      prop['exif_json'] = img.exif.to_json rescue nil
+    end
   end
 
   # Return a file with the data for the given format. It is the receiver's responsability to close the file.
@@ -135,6 +150,48 @@ class Image < Document
   # Return the size of the image for the given format (see Image for information on format)
   def filesize(format=nil)
     version.filesize(format)
+  end
+
+  def can_crop?(format)
+    x, y, w, h = [format['x'].to_i, 0].max, [format['y'].to_i, 0].max, [format['w'].to_i, width].min, [format['h'].to_i, height].min
+    (format['max_value'] && (format['max_value'].to_f * (format['max_unit'] == 'Mb' ? 1024 : 1) * 1024) < prop['size']) ||
+    (format['format'] && format['format'] != prop['ext']) ||
+    ((x < width && y < height && w > 0 && h > 0) && !(x==0 && y==0 && w == width && h == height))
+  end
+
+  # Crop the image using the 'crop' hash with the top left corner position (:x, :y) and the width and height (:width, :heigt). Example:
+  #   @node.crop = {:x=>10, :y=>10, :width=>30, :height=>60}
+  # Be carefull as this method changes the current file. So you should make a backup version before croping the image (the popup editor displays a warning).
+  def crop=(format)
+    if can_crop?(format)
+      # do crop
+      if file = self.cropped_file(format)
+        # crop can return nil, check first.
+        self.file = file
+      end
+    end
+  end
+
+
+  # Return a cropped image using the 'crop' hash with the top left corner position (:x, :y) and the width and height (:width, :heigt).
+  def cropped_file(format)
+    original   = format['original'] || @loaded_file || self.file
+    x, y, w, h = format['x'].to_f, format['y'].to_f, format['w'].to_f, format['h'].to_f
+    new_type   = format['format'] ? Zena::EXT_TO_TYPE[format['format'].downcase][0] : nil
+    max        = format['max_value'].to_f * (format['max_unit'] == 'Mb' ? 1024 : 1) * 1024
+
+    # crop image
+    img = Zena::Use::ImageBuilder.new(:file=>original)
+    img.crop!(x, y, w, h) if x && y && w && h
+    img.format       = format['format'] if new_type && new_type != content_type
+    img.max_filesize = max if format['max_value'] && max
+
+    file = Tempfile.new(filename)
+    File.open(file.path, "wb") { |f| f.syswrite(img.read) }
+
+    ctype = Zena::EXT_TO_TYPE[img.format.downcase][0]
+    fname = "#{filename}.#{Zena::TYPE_TO_EXT[ctype][0]}"
+    uploaded_file(file, filename, ctype)
   end
 
   private
@@ -169,6 +226,17 @@ class Image < Document
     def make_file(path, data)
       FileUtils::mkpath(File.dirname(path)) unless File.exist?(File.dirname(path))
       File.open(path, "wb") { |f| f.syswrite(data.read) }
+    end
+
+
+
+    def uploaded_file(file, filename = nil, content_type = nil)
+      (class << file; self; end;).class_eval do
+        alias local_path path if respond_to?(:path)  # FIXME: do we need this ?
+        define_method(:original_filename) { filename }
+        define_method(:content_type) { content_type }
+      end
+      file
     end
 
 end
