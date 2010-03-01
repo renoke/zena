@@ -5,7 +5,7 @@ class ImageTest < Zena::Unit::TestCase
   # don't use transaction fixtures so that after_commit (implemented in Versions gem) works.
   self.use_transactional_fixtures = false
 
-  context 'On create an image' do
+  context 'Creating an image' do
     setup do
       login(:tiger)
     end
@@ -65,10 +65,13 @@ class ImageTest < Zena::Unit::TestCase
     end
   end
 
-  context 'On resize image' do
+  context 'Resizing image with a new format' do
     setup do
       @pv_format = Iformat['pv']
       login(:ant)
+      @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
+                                          :name=>'birdy', :file => uploaded_jpg('bird.jpg')) }
+      @img.file(@pv_format)
     end
 
     teardown do
@@ -76,24 +79,39 @@ class ImageTest < Zena::Unit::TestCase
     end
 
     subject do
-      secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
-                                          :name=>'birdy', :file => uploaded_jpg('bird.jpg')) }
+      @img
     end
 
-    should 'return resolution widthxheight' do
+    should 'return the resolution corresponding to the new format' do
       assert_equal "70x70", "#{subject.width(@pv_format)}x#{subject.height(@pv_format)}"
     end
 
+    should 'return the full resolution by default' do
+      assert_equal "660x600", "#{subject.width()}x#{subject.height()}"
+    end
+
     should 'create a new file corresponding to the new format' do
-      assert !File.exist?( subject.filepath(@pv_format) )
+      assert File.exist?( subject.filepath(@pv_format) )
+    end
+
+    should 'create a new file path witch a folder named of the format' do
+      assert_match /pv/, subject.filepath(@pv_format)
     end
 
     should 'return file corresponding to the new format' do
-      assert_not_nil subject.file(@pv_format)
+      assert_kind_of File, subject.file(@pv_format)
+    end
+
+    should 'keep the original file' do
+      assert_match /full/, subject.filepath
+    end
+
+    should 'not create a version' do
+      assert_equal 1, subject.versions.count
     end
   end
 
-  context 'On accept content type' do
+  context 'Accepting content type' do
 
     should 'Image accept jpeg' do
       assert Image.accept_content_type?('image/jpeg')
@@ -104,7 +122,7 @@ class ImageTest < Zena::Unit::TestCase
     end
   end
 
-  context 'On update image file' do
+  context 'Updating image file' do
     setup do
       login(:tiger)
       @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),
@@ -149,7 +167,7 @@ class ImageTest < Zena::Unit::TestCase
     end
   end
 
-  context 'On update non image file' do
+  context 'Updating non image file' do
     setup do
       login(:tiger)
       @img = secure!(Image) { Image.create( :parent_id=>nodes_id(:cleanWater),

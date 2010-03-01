@@ -110,14 +110,13 @@ class Image < Document
 
   # Set content file, will refuse to accept the file if it is not an image.
   def file=(file)
-    transaction do
-      @new_image = super
-      raise ::ActiveRecord::Rollback unless Zena::Use::ImageBuilder.image_content_type?(@new_image.content_type)
-      img = image_with_format(nil)
-      prop['width' ] = img.width
-      prop['height'] = img.height
-      prop['exif_json'] = img.exif.to_json rescue nil
-    end
+      if Zena::Use::ImageBuilder.image_content_type?(file.content_type)
+        @new_image = super
+        img = image_with_format(nil)
+        prop['width' ] = img.width
+        prop['height'] = img.height
+        prop['exif_json'] = img.exif.to_json rescue nil
+      end
   end
 
   # Return a file with the data for the given format. It is the receiver's responsability to close the file.
@@ -132,11 +131,6 @@ class Image < Document
       end
     end
   end
-
-  # # Return the image file for the given format (see Image for information on format)
-  # def file(format=nil)
-  #   version.file(format)
-  # end
 
   # Return the size of the image for the given format (see Image for information on format)
   def filesize(format=nil)
@@ -164,12 +158,14 @@ class Image < Document
       end
     end
 
+    # Create an image with the new format.
     def make_image(format)
       return nil unless img = image_with_format(format)
       return nil if img.dummy?
       make_file(filepath(format),img)
     end
 
+    # Create a file without creating a Version and an Attachment.
     def make_file(path, data)
       FileUtils::mkpath(File.dirname(path)) unless File.exist?(File.dirname(path))
       File.open(path, "wb") { |f| f.syswrite(data.read) }
