@@ -104,9 +104,14 @@ class Document < Node
     end
   end # class << self
 
+  def update_attributes(attributes)
+    # Release content_type to nil before update, so that the execution is not influenced by existing file.
+    prop['content_type'] = nil
+    super
+  end
+
   # Create an attachment with a file in file system. Create a new version if file is updated.
   def file=(new_file)
-    self.version.backup = true
     if version_file = super(new_file)
       prop['content_type'] ||= version_file.content_type
       prop['size'] = version.file.size
@@ -124,6 +129,17 @@ class Document < Node
   # Set version title name
   def title=(t)
     version.title = t
+  end
+
+  # Return the file size.
+  def size(mode=nil)
+    if prop[:size]
+      prop[:size]
+    elsif !new_record? && File.exist?(self.filepath)
+      size = prop[:size] = File.stat(self.filepath).size
+      self.save
+      size
+    end
   end
 
   # Return true if the document is an image.
