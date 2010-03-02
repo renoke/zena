@@ -53,6 +53,10 @@ or to create a link to the article using the icon:
 
 =end
 class Image < Document
+
+  safe_method           :width => Number, :height => Number, :exif => 'ExifData'
+  attr_accessible       :content_type, :file, :crop
+
   before_validation     :image_before_validation
 
   class << self

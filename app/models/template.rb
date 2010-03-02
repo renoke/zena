@@ -15,9 +15,7 @@ Other templates have a name built from the given name, just like any other node.
 =end
 class Template < TextDocument
 
-  include RubyLess::SafeClass
-  safe_method       :ext => String, :format => String, :content_type => String, :filename => String, :tkpath=>String, :skin_name=> String,
-                    :mode=>String, :klass=>String
+  safe_method       :tkpath=>String, :skin_name=> String, :mode=>String, :klass=>String, :format=>String
 
   property do |t|
     t.string  "klass"
