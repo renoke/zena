@@ -7,6 +7,9 @@ module Zena
 
       # Inflate a zip file in a destination folder, which is by default the current directory.
       # It create destination directory for each file included in the zip file.
+      #
+      #   Zena::Use::DataCompression.unzip('blue_template.zip', 'skin')
+      #
       def self.unzip(zip_file, destination=Dir.pwd)
         Zip::ZipFile.new(zip_file).each do |f|
           f_path = File.join(destination, f.name)
