@@ -434,7 +434,8 @@ class Node < ActiveRecord::Base
           elsif filename =~ /\.tar$/
             `tar -C '#{folder}' -x < '#{archive.path}'`
           elsif filename =~ /\.zip$/
-            `unzip -d '#{folder}' '#{archive.path}'`
+            #{}`unzip -d '#{folder}' '#{archive.path}'`
+            Zena::Use::DataCompression.unzip archive.path, folder
           elsif filename =~ /(.*)(\.gz|\.z)$/
             `gzip -d '#{archive.path}' -c > '#{folder}/#{$1.gsub("'",'')}'`
           else
