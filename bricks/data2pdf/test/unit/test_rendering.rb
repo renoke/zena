@@ -29,11 +29,6 @@ class TestRendering < Test::Unit::TestCase
       assert_equal 'Prince', Data2pdf.engine
     end
 
-    should 'be able to start' do
-      Data2pdf.engine = 'Xhtml2pdf'
-      assert_equal Data2pdf::Xhtml2pdf, Data2pdf.start_engine!
-    end
-
   end
 
 

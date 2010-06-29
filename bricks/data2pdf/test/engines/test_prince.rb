@@ -1,7 +1,7 @@
 require 'helper'
 Data2pdf.engine = 'Prince'
 
-class TestXhtml2pdf < Test::Unit::TestCase
+class TestPrince < Test::Unit::TestCase
 
   should_act_as_an_engine
 

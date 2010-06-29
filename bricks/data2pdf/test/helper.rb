@@ -2,6 +2,7 @@ require 'rubygems'
 require 'test/unit'
 require 'shoulda'
 require 'mocha'
+require 'active_support'
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'shoulda_macros'))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..'))

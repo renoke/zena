@@ -1,12 +1,15 @@
 =begin rdoc
-  render "www.google.ch"                        => STDOUT       (strings)
-  render "www.google.ch", "out.pdf"             => out.pdf      (file)
+  Data2pdf is module to render file or IO streams (strings obviously) into pdf.
 
-  render "myfile.html"                          => STDOUT       (strings)
-  render "myfile.html", "out.pdf"               => out.pdf      (file)
+  Examples:
 
-  render "This is text to render."              => STDOUT       (strings)
-  render "This is text to render.", "out.pdf"   => out.pdf      (file)
+  Data.engine = 'Xhtml2pdf'
+
+  Data2pdf.render "myfile.html"                          => STDOUT       (strings)
+  Data2pdf.render "myfile.html", "out.pdf"               => out.pdf      (file)
+
+  Data2pdf.render "This is text to render."              => STDOUT       (strings)
+  Data2pdf.render "This is text to render.", "out.pdf"   => out.pdf      (file)
 =end
 
 dir = File.dirname(__FILE__)
@@ -15,9 +18,9 @@ require File.join(dir, 'engines', 'prince')
 
 module Data2pdf
 
-  class << self
+  mattr_accessor :engine
 
-    attr_accessor :engine
+  class << self
 
     def render src, dest=nil, opt={}
       start_engine!
@@ -48,7 +51,6 @@ module Data2pdf
       def start_engine!
         if engine_module = const_get(engine.to_s.capitalize)
           extend engine_module
-          engine_module
         end
       end
 

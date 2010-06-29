@@ -114,7 +114,6 @@ module Zena
             if opts[:format] == 'pdf'
               Data2pdf.engine =  'Xhtml2pdf'
               disposition = params['disposition']   || 'inline'
-
               if params.keys.include?("debug")
                 render :text => data
               else
